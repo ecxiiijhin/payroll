@@ -3,592 +3,1376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Management System</title>
+    <title>Interactive Payroll System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .sidebar {
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
         .sidebar.collapsed {
             width: 70px;
         }
-        .sidebar.collapsed .sidebar-text {
+        .sidebar.collapsed .nav-text {
             display: none;
         }
         .sidebar.collapsed .logo-text {
             display: none;
         }
-        .sidebar.collapsed .expand-icon {
-            transform: rotate(180deg);
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
         }
-        .payslip-table th {
-            position: sticky;
-            top: 0;
-            background-color: #f8fafc;
-            z-index: 10;
-        }
-        .expandable-row {
+        .main-content {
             transition: all 0.3s ease;
         }
-        .expandable-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
+        .sidebar.collapsed + .main-content {
+            margin-left: 70px;
         }
-        .expandable-row.expanded .expandable-content {
-            max-height: 500px;
+        .payslip-preview {
+            background-color: #f8f9fa;
+            border: 1px dashed #ccc;
+            min-height: 500px;
+        }
+        .highlight-row:hover {
+            background-color: #f0f9ff;
+        }
+        .print-only {
+            display: none;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .payslip-preview {
+                border: none;
+                background: white;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-100">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <div class="sidebar bg-blue-800 text-white w-64 flex flex-col">
-            <div class="p-4 flex items-center justify-between border-b border-blue-700">
-                <div class="flex items-center">
-                    <i class="fas fa-money-bill-wave text-2xl mr-3"></i>
-                    <span class="logo-text text-xl font-bold">PayrollPro</span>
-                </div>
-                <button id="toggle-sidebar" class="text-white focus:outline-none">
-                    <i class="fas fa-chevron-left expand-icon"></i>
-                </button>
+        <div class="sidebar bg-blue-800 text-white w-64 flex flex-col no-print" id="sidebar">
+            <div class="p-4 flex items-center">
+                <i class="fas fa-calculator text-2xl mr-3"></i>
+                <span class="logo-text text-xl font-bold">PayrollPro</span>
             </div>
-            <div class="flex-1 overflow-y-auto">
-                <nav class="p-4">
-                    <div class="mb-6">
-                        <p class="text-blue-300 uppercase text-xs font-semibold sidebar-text">Main</p>
-                        <ul class="mt-2">
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-tachometer-alt mr-3"></i>
-                                    <span class="sidebar-text">Dashboard</span>
-                                </a>
-                            </li>
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded bg-blue-700">
-                                    <i class="fas fa-calculator mr-3"></i>
-                                    <span class="sidebar-text">Payroll</span>
-                                </a>
-                            </li>
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-users mr-3"></i>
-                                    <span class="sidebar-text">Employees</span>
-                                </a>
-                            </li>
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-clock mr-3"></i>
-                                    <span class="sidebar-text">Time & Attendance</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="mb-6">
-                        <p class="text-blue-300 uppercase text-xs font-semibold sidebar-text">Reports</p>
-                        <ul class="mt-2">
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-file-alt mr-3"></i>
-                                    <span class="sidebar-text">Payroll Reports</span>
-                                </a>
-                            </li>
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-chart-pie mr-3"></i>
-                                    <span class="sidebar-text">Tax Reports</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div>
-                        <p class="text-blue-300 uppercase text-xs font-semibold sidebar-text">Settings</p>
-                        <ul class="mt-2">
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-cog mr-3"></i>
-                                    <span class="sidebar-text">System Settings</span>
-                                </a>
-                            </li>
-                            <li class="mb-1">
-                                <a href="#" class="flex items-center p-2 text-white rounded hover:bg-blue-700">
-                                    <i class="fas fa-user-shield mr-3"></i>
-                                    <span class="sidebar-text">User Management</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+            <div class="flex-grow overflow-y-auto">
+                <nav>
+                    <ul>
+                        <li class="nav-item">
+                            <a href="#" class="block px-4 py-3 hover:bg-blue-700 flex items-center active-nav" onclick="showSection('dashboard')">
+                                <i class="fas fa-tachometer-alt mr-3"></i>
+                                <span class="nav-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="block px-4 py-3 hover:bg-blue-700 flex items-center" onclick="showSection('employees')">
+                                <i class="fas fa-users mr-3"></i>
+                                <span class="nav-text">Employees</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="block px-4 py-3 hover:bg-blue-700 flex items-center" onclick="showSection('payroll')">
+                                <i class="fas fa-money-bill-wave mr-3"></i>
+                                <span class="nav-text">Payroll</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="block px-4 py-3 hover:bg-blue-700 flex items-center" onclick="showSection('reports')">
+                                <i class="fas fa-chart-bar mr-3"></i>
+                                <span class="nav-text">Reports</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="block px-4 py-3 hover:bg-blue-700 flex items-center" onclick="showSection('settings')">
+                                <i class="fas fa-cog mr-3"></i>
+                                <span class="nav-text">Settings</span>
+                            </a>
+                        </li>
+                    </ul>
                 </nav>
             </div>
             <div class="p-4 border-t border-blue-700">
-                <div class="flex items-center">
-                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=random" alt="User" class="w-8 h-8 rounded-full">
-                    <div class="ml-3 sidebar-text">
-                        <p class="text-sm font-medium">John Doe</p>
-                        <p class="text-xs text-blue-300">Payroll Manager</p>
-                    </div>
-                </div>
+                <button class="flex items-center text-white hover:text-blue-200" onclick="toggleSidebar()">
+                    <i class="fas fa-chevron-left mr-2"></i>
+                    <span class="nav-text">Collapse</span>
+                </button>
             </div>
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto">
+        <div class="main-content flex-1 overflow-auto ml-64">
             <!-- Top Navigation -->
-            <header class="bg-white shadow-sm">
-                <div class="px-6 py-4 flex items-center justify-between">
-                    <h1 class="text-2xl font-semibold text-gray-800">Payroll Management</h1>
-                    <div class="flex items-center space-x-4">
-                        <button class="p-2 rounded-full hover:bg-gray-100 relative">
-                            <i class="fas fa-bell text-gray-600"></i>
-                            <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-                        </button>
-                        <button class="p-2 rounded-full hover:bg-gray-100">
-                            <i class="fas fa-question-circle text-gray-600"></i>
-                        </button>
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center no-print">
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-800" id="section-title">Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell text-gray-500 cursor-pointer"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="h-8 w-8 rounded-full mr-2">
+                        <span class="text-gray-700">Admin</span>
                     </div>
                 </div>
             </header>
 
-            <!-- Content -->
-            <main class="p-6">
-                <!-- Payroll Summary Cards -->
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="bg-white rounded-lg shadow p-6">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <p class="text-gray-500 text-sm">Current Payroll</p>
-                                <p class="text-2xl font-semibold mt-1">$124,560</p>
+                                <p class="text-gray-500">Total Employees</p>
+                                <h3 class="text-2xl font-bold" id="total-employees">0</h3>
                             </div>
                             <div class="bg-blue-100 p-3 rounded-full">
-                                <i class="fas fa-money-bill-wave text-blue-600"></i>
+                                <i class="fas fa-users text-blue-500 text-xl"></i>
                             </div>
                         </div>
-                        <p class="text-green-500 text-sm mt-2">
-                            <i class="fas fa-arrow-up mr-1"></i> 12% from last period
-                        </p>
                     </div>
                     <div class="bg-white rounded-lg shadow p-6">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <p class="text-gray-500 text-sm">Employees</p>
-                                <p class="text-2xl font-semibold mt-1">87</p>
+                                <p class="text-gray-500">This Month's Payroll</p>
+                                <h3 class="text-2xl font-bold" id="month-payroll">$0.00</h3>
                             </div>
                             <div class="bg-green-100 p-3 rounded-full">
-                                <i class="fas fa-users text-green-600"></i>
+                                <i class="fas fa-money-bill-wave text-green-500 text-xl"></i>
                             </div>
                         </div>
-                        <p class="text-green-500 text-sm mt-2">
-                            <i class="fas fa-arrow-up mr-1"></i> 5 new hires
-                        </p>
                     </div>
                     <div class="bg-white rounded-lg shadow p-6">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <p class="text-gray-500 text-sm">Pending Approval</p>
-                                <p class="text-2xl font-semibold mt-1">2</p>
+                                <p class="text-gray-500">Pending Approvals</p>
+                                <h3 class="text-2xl font-bold" id="pending-approvals">0</h3>
                             </div>
                             <div class="bg-yellow-100 p-3 rounded-full">
-                                <i class="fas fa-clock text-yellow-600"></i>
+                                <i class="fas fa-clock text-yellow-500 text-xl"></i>
                             </div>
                         </div>
-                        <p class="text-red-500 text-sm mt-2">
-                            <i class="fas fa-exclamation-circle mr-1"></i> Requires attention
-                        </p>
                     </div>
                     <div class="bg-white rounded-lg shadow p-6">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <p class="text-gray-500 text-sm">Tax Liability</p>
-                                <p class="text-2xl font-semibold mt-1">$34,876</p>
+                                <p class="text-gray-500">Upcoming Holidays</p>
+                                <h3 class="text-2xl font-bold" id="upcoming-holidays">0</h3>
                             </div>
                             <div class="bg-purple-100 p-3 rounded-full">
-                                <i class="fas fa-file-invoice-dollar text-purple-600"></i>
+                                <i class="fas fa-calendar-alt text-purple-500 text-xl"></i>
                             </div>
                         </div>
-                        <p class="text-gray-500 text-sm mt-2">
-                            <i class="fas fa-info-circle mr-1"></i> Due in 14 days
-                        </p>
                     </div>
                 </div>
 
-                <!-- Payroll Actions -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="p-4 border-b flex justify-between items-center">
-                        <h2 class="text-lg font-semibold">Payroll Runs</h2>
-                        <div class="flex space-x-2">
-                            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
-                                <i class="fas fa-plus mr-2"></i> New Payroll Run
-                            </button>
-                            <button class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center">
-                                <i class="fas fa-file-import mr-2"></i> Import Timesheets
-                            </button>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold">Recent Payroll Activities</h2>
+                            <button class="text-blue-500 text-sm">View All</button>
                         </div>
-                    </div>
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex space-x-2">
-                                <div class="relative">
-                                    <select class="appearance-none bg-white border border-gray-300 rounded px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option>All Status</option>
-                                        <option>Draft</option>
-                                        <option>Pending Approval</option>
-                                        <option>Approved</option>
-                                        <option>Paid</option>
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <i class="fas fa-chevron-down text-gray-400"></i>
-                                    </div>
-                                </div>
-                                <div class="relative">
-                                    <select class="appearance-none bg-white border border-gray-300 rounded px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option>All Periods</option>
-                                        <option>January 2023</option>
-                                        <option>February 2023</option>
-                                        <option>March 2023</option>
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <i class="fas fa-chevron-down text-gray-400"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="relative">
-                                <input type="text" placeholder="Search..." class="border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                            </div>
-                        </div>
-
-                        <!-- Payroll Runs Table -->
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payroll ID</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employees</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Pay</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Pay</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PR-2023-06-001</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">June 1-15, 2023</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">87</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$124,560.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$89,684.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-eye"></i></button>
-                                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-file-pdf"></i></button>
-                                            <button class="text-purple-600 hover:text-purple-900"><i class="fas fa-file-export"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PR-2023-05-002</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 16-31, 2023</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">85</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$119,450.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$85,876.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Approval</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-eye"></i></button>
-                                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-file-pdf"></i></button>
-                                            <button class="text-purple-600 hover:text-purple-900"><i class="fas fa-file-export"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PR-2023-05-001</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 1-15, 2023</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">84</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$117,320.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$84,456.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Paid</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-eye"></i></button>
-                                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-file-pdf"></i></button>
-                                            <button class="text-purple-600 hover:text-purple-900"><i class="fas fa-file-export"></i></button>
-                                        </td>
-                                    </tr>
+                                <tbody class="bg-white divide-y divide-gray-200" id="recent-activities">
+                                    <!-- Filled by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
-
-                <!-- Payroll Details -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="p-4 border-b">
-                        <h2 class="text-lg font-semibold">Payroll Details: PR-2023-06-001</h2>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-semibold mb-4">Payroll Calendar</h2>
+                        <div id="calendar" class="mb-4"></div>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                                <span class="text-sm">Payday</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm">Holiday</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-4">
+                </div>
+            </section>
+
+            <!-- Employees Section -->
+            <section id="employees-section" class="p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold">Employee Management</h2>
+                        <button onclick="showAddEmployeeModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Add Employee
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+                        <div class="relative w-full md:w-64">
+                            <input type="text" id="employee-search" placeholder="Search employees..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <div class="flex space-x-2">
+                            <select id="department-filter" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Departments</option>
+                                <option value="IT">IT</option>
+                                <option value="HR">HR</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                            </select>
+                            <select id="status-filter" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Join Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="employee-table-body">
+                                <!-- Filled by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="text-sm text-gray-500">
+                            Showing <span id="showing-from">1</span> to <span id="showing-to">10</span> of <span id="total-employees-count">0</span> entries
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="px-3 py-1 border rounded-lg bg-gray-100">Previous</button>
+                            <button class="px-3 py-1 border rounded-lg bg-blue-500 text-white">1</button>
+                            <button class="px-3 py-1 border rounded-lg bg-gray-100">2</button>
+                            <button class="px-3 py-1 border rounded-lg bg-gray-100">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payroll Section -->
+            <section id="payroll-section" class="p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold">Payroll Processing</h2>
+                        <div class="flex space-x-2">
+                            <button onclick="showRunPayrollModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-play mr-2"></i> Run Payroll
+                            </button>
+                            <button onclick="showImportModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-file-import mr-2"></i> Import
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+                        <div class="flex space-x-2">
+                            <select id="payroll-period" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="2023-06">June 2023</option>
+                                <option value="2023-05">May 2023</option>
+                                <option value="2023-04">April 2023</option>
+                            </select>
+                            <select id="payroll-status" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Status</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Paid">Paid</option>
+                            </select>
+                        </div>
+                        <button onclick="exportPayroll()" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-file-export mr-2"></i> Export
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payroll ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employees</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processed On</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="payroll-table-body">
+                                <!-- Filled by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="text-sm text-gray-500">
+                            Showing <span id="payroll-showing-from">1</span> to <span id="payroll-showing-to">5</span> of <span id="total-payroll-count">0</span> entries
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="px-3 py-1 border rounded-lg bg-gray-100">Previous</button>
+                            <button class="px-3 py-1 border rounded-lg bg-blue-500 text-white">1</button>
+                            <button class="px-3 py-1 border rounded-lg bg-gray-100">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports-section" class="p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-6">Payroll Reports</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white border rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium">Payroll Summary</h3>
+                                <select class="border rounded px-2 py-1 text-sm">
+                                    <option>Last 12 Months</option>
+                                    <option>This Year</option>
+                                    <option>Last Year</option>
+                                </select>
+                            </div>
+                            <div id="payroll-summary-chart" class="h-64"></div>
+                        </div>
+                        <div class="bg-white border rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium">Department Breakdown</h3>
+                                <select class="border rounded px-2 py-1 text-sm">
+                                    <option>Current Month</option>
+                                    <option>Last Month</option>
+                                    <option>Quarter</option>
+                                </select>
+                            </div>
+                            <div id="department-chart" class="h-64"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-4 mb-6">
                         <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <p class="text-gray-600">Period: <span class="font-medium">June 1-15, 2023</span></p>
-                                <p class="text-gray-600">Status: <span class="font-medium text-green-600">Approved</span></p>
-                            </div>
+                            <h3 class="font-medium">Tax Deductions Report</h3>
                             <div class="flex space-x-2">
-                                <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center">
-                                    <i class="fas fa-file-pdf mr-2"></i> Export Payslips
-                                </button>
-                                <button class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center">
-                                    <i class="fas fa-file-export mr-2"></i> Bank Export
-                                </button>
-                                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
-                                    <i class="fas fa-envelope mr-2"></i> Email Payslips
-                                </button>
+                                <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Export PDF</button>
+                                <button class="bg-green-500 text-white px-3 py-1 rounded text-sm">Export Excel</button>
                             </div>
                         </div>
-
-                        <!-- Payroll Summary -->
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div class="border rounded-lg p-4">
-                                <p class="text-gray-500 text-sm">Gross Pay</p>
-                                <p class="text-2xl font-semibold">$124,560.00</p>
-                            </div>
-                            <div class="border rounded-lg p-4">
-                                <p class="text-gray-500 text-sm">Total Deductions</p>
-                                <p class="text-2xl font-semibold">$34,876.00</p>
-                            </div>
-                            <div class="border rounded-lg p-4">
-                                <p class="text-gray-500 text-sm">Net Pay</p>
-                                <p class="text-2xl font-semibold">$89,684.00</p>
-                            </div>
-                            <div class="border rounded-lg p-4">
-                                <p class="text-gray-500 text-sm">Tax Liability</p>
-                                <p class="text-2xl font-semibold">$28,450.00</p>
-                            </div>
-                        </div>
-
-                        <!-- Employee Payslips Table -->
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 payslip-table">
+                            <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Pay</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deductions</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Pay</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Pay</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Social Security</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Insurance</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Pay</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <!-- Employee 1 -->
-                                    <tr class="expandable-row cursor-pointer hover:bg-gray-50" onclick="toggleRow(this)">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-10 w-10">
-                                                    <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=John+Smith&background=random" alt="">
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">John Smith</div>
-                                                    <div class="text-sm text-gray-500">john.smith@example.com</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">EMP-001</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Engineering</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$5,200.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$1,450.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$3,750.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Processed</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
-                                        </td>
-                                    </tr>
-                                    <tr class="expandable-content">
-                                        <td colspan="8" class="px-6 py-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <h4 class="text-sm font-medium text-gray-900 mb-2">Earnings</h4>
-                                                    <table class="min-w-full divide-y divide-gray-200">
-                                                        <tbody class="bg-white divide-y divide-gray-200">
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Base Salary</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$4,500.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Overtime (5 hrs)</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$450.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Bonus</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$250.00</td>
-                                                            </tr>
-                                                            <tr class="font-medium">
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Total Earnings</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">$5,200.00</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <div>
-                                                    <h4 class="text-sm font-medium text-gray-900 mb-2">Deductions</h4>
-                                                    <table class="min-w-full divide-y divide-gray-200">
-                                                        <tbody class="bg-white divide-y divide-gray-200">
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Federal Tax</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$850.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">State Tax</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$350.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Social Security</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$150.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">401(k) Contribution</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$100.00</td>
-                                                            </tr>
-                                                            <tr class="font-medium">
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Total Deductions</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">$1,450.00</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex justify-end">
-                                                <button class="px-4 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                                    <i class="fas fa-file-pdf mr-2"></i> Download Payslip
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Employee 2 -->
-                                    <tr class="expandable-row cursor-pointer hover:bg-gray-50" onclick="toggleRow(this)">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-10 w-10">
-                                                    <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=random" alt="">
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">Sarah Johnson</div>
-                                                    <div class="text-sm text-gray-500">sarah.johnson@example.com</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">EMP-002</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Marketing</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$4,800.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$1,320.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$3,480.00</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Processed</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
-                                        </td>
-                                    </tr>
-                                    <tr class="expandable-content">
-                                        <td colspan="8" class="px-6 py-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <h4 class="text-sm font-medium text-gray-900 mb-2">Earnings</h4>
-                                                    <table class="min-w-full divide-y divide-gray-200">
-                                                        <tbody class="bg-white divide-y divide-gray-200">
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Base Salary</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$4,500.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Commission</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$300.00</td>
-                                                            </tr>
-                                                            <tr class="font-medium">
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Total Earnings</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">$4,800.00</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <div>
-                                                    <h4 class="text-sm font-medium text-gray-900 mb-2">Deductions</h4>
-                                                    <table class="min-w-full divide-y divide-gray-200">
-                                                        <tbody class="bg-white divide-y divide-gray-200">
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Federal Tax</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$800.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">State Tax</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$320.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Social Security</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$150.00</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Health Insurance</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">$50.00</td>
-                                                            </tr>
-                                                            <tr class="font-medium">
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Total Deductions</td>
-                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">$1,320.00</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex justify-end">
-                                                <button class="px-4 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                                    <i class="fas fa-file-pdf mr-2"></i> Download Payslip
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tbody class="bg-white divide-y divide-gray-200" id="tax-report-body">
+                                    <!-- Filled by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                    
+                    <div class="bg-white border rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Custom Report Generator</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                                <select class="w-full border rounded-lg px-3 py-2">
+                                    <option>Payroll Summary</option>
+                                    <option>Employee Earnings</option>
+                                    <option>Tax Deductions</option>
+                                    <option>Benefits Summary</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                                <select class="w-full border rounded-lg px-3 py-2">
+                                    <option>Last Month</option>
+                                    <option>This Month</option>
+                                    <option>Last Quarter</option>
+                                    <option>This Year</option>
+                                    <option>Custom Range</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                                <select class="w-full border rounded-lg px-3 py-2">
+                                    <option>All Departments</option>
+                                    <option>IT</option>
+                                    <option>HR</option>
+                                    <option>Finance</option>
+                                    <option>Marketing</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Generate Report</button>
+                    </div>
                 </div>
-            </main>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-6">System Settings</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="font-medium mb-3 flex items-center">
+                                <i class="fas fa-building mr-2 text-blue-500"></i> Company Information
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm text-gray-500">Company Name</label>
+                                    <p class="font-medium">Tech Solutions Inc.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-500">Tax ID</label>
+                                    <p class="font-medium">123-456-789</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-500">Address</label>
+                                    <p class="font-medium">123 Business St, Suite 100, San Francisco, CA 94107</p>
+                                </div>
+                                <button class="text-blue-500 text-sm mt-2">Edit Information</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="font-medium mb-3 flex items-center">
+                                <i class="fas fa-money-bill-wave mr-2 text-green-500"></i> Payroll Settings
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm text-gray-500">Pay Frequency</label>
+                                    <p class="font-medium">Bi-weekly (Every 2 weeks)</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-500">Default Pay Day</label>
+                                    <p class="font-medium">Friday</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-500">Overtime Rate</label>
+                                    <p class="font-medium">1.5x regular rate</p>
+                                </div>
+                                <button class="text-blue-500 text-sm mt-2">Configure Payroll</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="font-medium mb-3 flex items-center">
+                                <i class="fas fa-percentage mr-2 text-purple-500"></i> Tax Settings
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm text-gray-500">Federal Tax Rate</label>
+                                    <p class="font-medium">22%</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-500">State Tax Rate</label>
+                                    <p class="font-medium">5%</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-500">Social Security</label>
+                                    <p class="font-medium">6.2%</p>
+                                </div>
+                                <button class="text-blue-500 text-sm mt-2">Update Tax Rates</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="font-medium mb-3 flex items-center">
+                            <i class="fas fa-user-shield mr-2 text-red-500"></i> User Access Control
+                        </h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="" class="h-8 w-8 rounded-full mr-2">
+                                                    <div>
+                                                        <div class="font-medium">Admin User</div>
+                                                        <div class="text-gray-500 text-sm">admin@example.com</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Administrator</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Today, 10:45 AM</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <button class="text-blue-500 mr-2">Edit</button>
+                                                <button class="text-red-500">Remove</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="" class="h-8 w-8 rounded-full mr-2">
+                                                    <div>
+                                                        <div class="font-medium">Payroll Manager</div>
+                                                        <div class="text-gray-500 text-sm">payroll@example.com</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Payroll Manager</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yesterday, 3:30 PM</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <button class="text-blue-500 mr-2">Edit</button>
+                                                <button class="text-red-500">Remove</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="mt-4 text-blue-500 text-sm">Add New User</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium mb-3 flex items-center">
+                            <i class="fas fa-database mr-2 text-yellow-500"></i> Data Management
+                        </h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <h4 class="font-medium mb-2">Backup</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Last backup: June 15, 2023</p>
+                                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fas fa-save mr-2"></i> Create Backup Now
+                                    </button>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2">Restore</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Restore from a previous backup</p>
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fas fa-undo mr-2"></i> Restore Backup
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="border-t pt-4">
+                                <h4 class="font-medium mb-2">Export Data</h4>
+                                <p class="text-sm text-gray-600 mb-3">Export payroll data for external processing</p>
+                                <div class="flex space-x-2">
+                                    <button class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fas fa-file-excel mr-2"></i> Export to Excel
+                                    </button>
+                                    <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fas fa-file-pdf mr-2"></i> Export to PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="add-employee-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Add New Employee</h3>
+                    <button onclick="closeModal('add-employee-modal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="employee-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h4 class="font-medium mb-3 text-blue-600">Personal Information</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="first-name" class="block text-sm font-medium text-gray-700 mb-1">First Name*</label>
+                                    <input type="text" id="first-name" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="last-name" class="block text-sm font-medium text-gray-700 mb-1">Last Name*</label>
+                                    <input type="text" id="last-name" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="dob" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                    <input type="date" id="dob" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                    <select id="gender" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium mb-3 text-blue-600">Contact Information</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email*</label>
+                                    <input type="email" id="email" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <input type="tel" id="phone" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                    <textarea id="address" rows="2" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h4 class="font-medium mb-3 text-blue-600">Employment Details</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="employee-id" class="block text-sm font-medium text-gray-700 mb-1">Employee ID*</label>
+                                    <input type="text" id="employee-id" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department*</label>
+                                    <select id="department" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        <option value="">Select Department</option>
+                                        <option value="IT">IT</option>
+                                        <option value="HR">HR</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Operations">Operations</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="position" class="block text-sm font-medium text-gray-700 mb-1">Position*</label>
+                                    <input type="text" id="position" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="join-date" class="block text-sm font-medium text-gray-700 mb-1">Join Date*</label>
+                                    <input type="date" id="join-date" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium mb-3 text-blue-600">Salary Information</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="salary-type" class="block text-sm font-medium text-gray-700 mb-1">Salary Type*</label>
+                                    <select id="salary-type" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        <option value="">Select Type</option>
+                                        <option value="Monthly">Monthly</option>
+                                        <option value="Hourly">Hourly</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="basic-salary" class="block text-sm font-medium text-gray-700 mb-1">Basic Salary*</label>
+                                    <input type="number" id="basic-salary" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="bank-name" class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                                    <input type="text" id="bank-name" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="account-number" class="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                                    <input type="text" id="account-number" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3 text-blue-600">Tax Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="tax-id" class="block text-sm font-medium text-gray-700 mb-1">Tax ID</label>
+                                <input type="text" id="tax-id" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="tax-status" class="block text-sm font-medium text-gray-700 mb-1">Tax Status</label>
+                                <select id="tax-status" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Head of Household">Head of Household</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="allowances" class="block text-sm font-medium text-gray-700 mb-1">Allowances</label>
+                                <input type="number" id="allowances" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal('add-employee-modal')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Save Employee</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Run Payroll Modal -->
+    <div id="run-payroll-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Run Payroll</h3>
+                    <button onclick="closeModal('run-payroll-modal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="payroll-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="payroll-period" class="block text-sm font-medium text-gray-700 mb-1">Pay Period*</label>
+                            <select id="payroll-period" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Select Period</option>
+                                <option value="2023-06">June 2023</option>
+                                <option value="2023-05">May 2023</option>
+                                <option value="2023-04">April 2023</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="pay-date" class="block text-sm font-medium text-gray-700 mb-1">Pay Date*</label>
+                            <input type="date" id="pay-date" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Employees to Include</label>
+                        <div class="border rounded-lg p-3 max-h-60 overflow-y-auto">
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="select-all" class="mr-2" onchange="toggleSelectAll()">
+                                    <label for="select-all" class="font-medium">Select All Active Employees</label>
+                                </div>
+                                <div id="employee-checklist" class="space-y-2">
+                                    <!-- Filled by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Additional Options</label>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="include-bonuses" class="mr-2">
+                                <label for="include-bonuses">Include Bonuses</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="include-deductions" class="mr-2">
+                                <label for="include-deductions">Include Deductions</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="send-payslips" class="mr-2" checked>
+                                <label for="send-payslips">Send Payslips via Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal('run-payroll-modal')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Run Payroll</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payslip Modal -->
+    <div id="payslip-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Payslip Preview</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="printPayslip()" class="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200">
+                            <i class="fas fa-print mr-1"></i> Print
+                        </button>
+                        <button onclick="closeModal('payslip-modal')" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="payslip-preview p-6 mb-6">
+                    <div class="print-only mb-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold">Tech Solutions Inc.</h2>
+                                <p class="text-gray-600">123 Business St, Suite 100</p>
+                                <p class="text-gray-600">San Francisco, CA 94107</p>
+                            </div>
+                            <div class="text-right">
+                                <h3 class="text-xl font-semibold">PAYSLIP</h3>
+                                <p class="text-gray-600">Pay Period: June 1 - June 30, 2023</p>
+                                <p class="text-gray-600">Pay Date: July 5, 2023</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div>
+                                <h4 class="font-medium text-lg mb-2">Employee Information</h4>
+                                <p class="font-semibold" id="payslip-employee-name">John Doe</p>
+                                <p id="payslip-employee-id">Employee ID: EMP-1001</p>
+                                <p id="payslip-employee-position">Position: Software Engineer</p>
+                                <p id="payslip-employee-department">Department: IT</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-lg mb-2">Payment Information</h4>
+                                <p id="payslip-payment-method">Payment Method: Direct Deposit</p>
+                                <p id="payslip-bank-name">Bank: Chase Bank</p>
+                                <p id="payslip-account-number">Account: ****3456</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div>
+                                <h4 class="font-medium text-lg mb-2">Earnings</h4>
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="text-left py-2">Description</th>
+                                            <th class="text-right py-2">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b">
+                                            <td class="py-2">Basic Salary</td>
+                                            <td class="text-right py-2">$5,000.00</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Overtime</td>
+                                            <td class="text-right py-2">$375.00</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Bonus</td>
+                                            <td class="text-right py-2">$500.00</td>
+                                        </tr>
+                                        <tr class="font-semibold">
+                                            <td class="py-2">Total Earnings</td>
+                                            <td class="text-right py-2">$5,875.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-lg mb-2">Deductions</h4>
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="text-left py-2">Description</th>
+                                            <th class="text-right py-2">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b">
+                                            <td class="py-2">Federal Tax</td>
+                                            <td class="text-right py-2">$1,175.00</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">State Tax</td>
+                                            <td class="text-right py-2">$293.75</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Social Security</td>
+                                            <td class="text-right py-2">$364.25</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Health Insurance</td>
+                                            <td class="text-right py-2">$150.00</td>
+                                        </tr>
+                                        <tr class="font-semibold">
+                                            <td class="py-2">Total Deductions</td>
+                                            <td class="text-right py-2">$1,983.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-100 p-4 rounded-lg mb-6">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-medium text-lg">Net Pay</h4>
+                                <p class="text-2xl font-bold">$3,892.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-medium text-lg mb-2">Leave Balance</h4>
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="text-left py-2">Leave Type</th>
+                                            <th class="text-right py-2">Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b">
+                                            <td class="py-2">Annual Leave</td>
+                                            <td class="text-right py-2">12 days</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Sick Leave</td>
+                                            <td class="text-right py-2">8 days</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-lg mb-2">Year-to-Date Summary</h4>
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="text-left py-2">Description</th>
+                                            <th class="text-right py-2">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b">
+                                            <td class="py-2">Gross Earnings</td>
+                                            <td class="text-right py-2">$35,250.00</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Tax Paid</td>
+                                            <td class="text-right py-2">$8,812.50</td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="py-2">Net Pay</td>
+                                            <td class="text-right py-2">$23,352.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 pt-4 border-t text-center text-sm text-gray-500">
+                            <p>This is a computer generated payslip and does not require a signature.</p>
+                            <p>For any queries, please contact the HR department.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button onclick="closeModal('payslip-modal')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Import Data</h3>
+                    <button onclick="closeModal('import-modal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Import Type</label>
+                    <select id="import-type" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Import Type</option>
+                        <option value="employees">Employees</option>
+                        <option value="timesheets">Timesheets</option>
+                        <option value="deductions">Deductions</option>
+                        <option value="bonuses">Bonuses</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <i class="fas fa-file-excel text-4xl text-green-500 mb-2"></i>
+                        <p class="text-gray-500 mb-2">Drag and drop your Excel file here or click to browse</p>
+                        <input type="file" id="file-upload" class="hidden" accept=".xlsx, .xls, .csv">
+                        <button onclick="document.getElementById('file-upload').click()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
+                            Select File
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">Supported formats: .xlsx, .xls, .csv</p>
+                    </div>
+                </div>
+                
+                <div class="mb-6 hidden" id="import-mapping">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Column Mapping</label>
+                    <div class="border rounded-lg p-3 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">System Field</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Column</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="mapping-fields">
+                                <!-- Filled by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeModal('import-modal')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button id="import-button" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 opacity-50 cursor-not-allowed" disabled>Import</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Toggle sidebar
-        document.getElementById('toggle-sidebar').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('collapsed');
+        // Sample data for the application
+        const employees = [
+            {
+                id: "EMP-1001",
+                firstName: "John",
+                lastName: "Doe",
+                email: "john.doe@example.com",
+                position: "Software Engineer",
+                department: "IT",
+                joinDate: "2021-03-15",
+                status: "Active",
+                salary: 5000,
+                salaryType: "Monthly"
+            },
+            {
+                id: "EMP-1002",
+                firstName: "Jane",
+                lastName: "Smith",
+                email: "jane.smith@example.com",
+                position: "HR Manager",
+                department: "HR",
+                joinDate: "2020-07-22",
+                status: "Active",
+                salary: 6500,
+                salaryType: "Monthly"
+            },
+            {
+                id: "EMP-1003",
+                firstName: "Robert",
+                lastName: "Johnson",
+                email: "robert.j@example.com",
+                position: "Accountant",
+                department: "Finance",
+                joinDate: "2022-01-10",
+                status: "Active",
+                salary: 5500,
+                salaryType: "Monthly"
+            },
+            {
+                id: "EMP-1004",
+                firstName: "Emily",
+                lastName: "Williams",
+                email: "emily.w@example.com",
+                position: "Marketing Specialist",
+                department: "Marketing",
+                joinDate: "2021-11-05",
+                status: "Active",
+                salary: 4800,
+                salaryType: "Monthly"
+            },
+            {
+                id: "EMP-1005",
+                firstName: "Michael",
+                lastName: "Brown",
+                email: "michael.b@example.com",
+                position: "IT Support",
+                department: "IT",
+                joinDate: "2022-06-18",
+                status: "Active",
+                salary: 4200,
+                salaryType: "Monthly"
+            }
+        ];
+
+        const payrolls = [
+            {
+                id: "PY-2023-06",
+                period: "June 2023",
+                employeeCount: 5,
+                totalAmount: 26000,
+                status: "Paid",
+                processedOn: "2023-07-05"
+            },
+            {
+                id: "PY-2023-05",
+                period: "May 2023",
+                employeeCount: 5,
+                totalAmount: 26000,
+                status: "Paid",
+                processedOn: "2023-06-05"
+            },
+            {
+                id: "PY-2023-04",
+                period: "April 2023",
+                employeeCount: 5,
+                totalAmount: 26000,
+                status: "Paid",
+                processedOn: "2023-05-05"
+            }
+        ];
+
+        const recentActivities = [
+            {
+                employee: "John Doe",
+                period: "June 2023",
+                amount: 3892,
+                status: "Paid"
+            },
+            {
+                employee: "Jane Smith",
+                period: "June 2023",
+                amount: 5054,
+                status: "Paid"
+            },
+            {
+                employee: "Robert Johnson",
+                period: "June 2023",
+                amount: 4279,
+                status: "Paid"
+            },
+            {
+                employee: "Emily Williams",
+                period: "June 2023",
+                amount: 3734,
+                status: "Paid"
+            },
+            {
+                employee: "Michael Brown",
+                period: "June 2023",
+                amount: 3278,
+                status: "Paid"
+            }
+        ];
+
+        const taxReport = [
+            {
+                employee: "John Doe",
+                id: "EMP-1001",
+                grossPay: 5875,
+                tax: 1468.75,
+                socialSecurity: 364.25,
+                healthInsurance: 150,
+                netPay: 3892
+            },
+            {
+                employee: "Jane Smith",
+                id: "EMP-1002",
+                grossPay: 7637.50,
+                tax: 1909.38,
+                socialSecurity: 473.53,
+                healthInsurance: 200,
+                netPay: 5054.59
+            },
+            {
+                employee: "Robert Johnson",
+                id: "EMP-1003",
+                grossPay: 6462.50,
+                tax: 1615.63,
+                socialSecurity: 400.68,
+                healthInsurance: 150,
+                netPay: 4296.19
+            },
+            {
+                employee: "Emily Williams",
+                id: "EMP-1004",
+                grossPay: 5640,
+                tax: 1410,
+                socialSecurity: 349.68,
+                healthInsurance: 150,
+                netPay: 3730.32
+            },
+            {
+                employee: "Michael Brown",
+                id: "EMP-1005",
+                grossPay: 4935,
+                tax: 1233.75,
+                socialSecurity: 306.03,
+                healthInsurance: 120,
+                netPay: 3275.22
+            }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load dashboard data
+            updateDashboard();
+            
+            // Load employee table
+            renderEmployeeTable();
+            
+            // Load payroll table
+            renderPayrollTable();
+            
+            // Load recent activities
+            renderRecentActivities();
+            
+            // Load tax report
+            renderTaxReport();
+            
+            // Initialize forms
+            initForms();
+            
+            // Set up event listeners
+            setupEventListeners();
         });
 
-        // Toggle expandable rows
-        function toggleRow(row) {
-            const expandedRow = row.closest('tr');
-            const contentRow = expandedRow.nextElementSibling;
-            
-            expandedRow.classList.toggle('expanded');
-            
-            const icon = expandedRow.querySelector('i.fa-chevron-down');
-            if (expandedRow.classList.contains('expanded')) {
-                icon.classList.add('transform', 'rotate-180');
-            } else {
-                icon.classList.remove('transform', 'rotate-180');
-            }
+        function updateDashboard() {
+            document.getElementById('total-employees').textContent = employees.length;
+            document.getElementById('month-payroll').textContent = '$' + payrolls[0].totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('pending-approvals').textContent = '0';
+            document.getElementById('upcoming-holidays').textContent = '1';
         }
 
-        // Sample data for charts (would be replaced with real data in a production app)
-        const payrollData = {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            grossPay: [100000, 105000, 110000, 115000, 120000, 124560],
-            netPay: [72000, 75600, 79200, 82800, 86400, 89684]
-        };
-    </script>
+        function renderEmployeeTable() {
+            const tbody = document.getElementById('employee-table-body');
+            tbody.innerHTML = '';
+            
+            employees.forEach(employee => {
+                const row = document.createElement('tr');
+                row.className = 'highlight-row';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${employee.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${employee.firstName}+${employee.lastName}&background=random" alt="">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${employee.firstName} ${employee.lastName}</div>
+                                <div class="text-sm text-gray-500">${employee.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${employee.position}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${employee.department}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(employee.joinDate)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${employee.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${employee.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="viewEmployee('${employee.id}')" class="text-blue-500 hover:text-blue-700 mr-3">View</button>
+                        <button onclick="editEmployee('${employee.id}')" class="text-yellow-500 hover:text-yellow-700 mr-3">Edit</button>
+                        <button onclick="deleteEmployee('${employee.id}')" class="text-red-500 hover:text-red-700">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('total-employees-count').textContent = employees.length;
+            document.getElementById('showing-from').textContent = '1';
+            document.getElementById('showing-to').textContent = employees.length;
+        }
+
+        function renderPayrollTable() {
+            const tbody = document.getElementById('payroll-table-body');
+            tbody.innerHTML = '';
+            
+            payrolls.forEach(payroll => {
+                const row = document.createElement('tr');
+                row.className = 'highlight-row';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${payroll.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${payroll.period}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${payroll.employeeCount} employees</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${payroll.totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(payroll.status)}">${payroll.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(payroll.processedOn)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="viewPayroll('${payroll.id}')" class="text-blue-500 hover:text-blue-700 mr-3">View</button>
+                        <button onclick="editPayroll('${payroll.id}')" class="text-yellow-500 hover:text-yellow-700 mr-3">Edit</button>
+                        <button onclick="deletePayroll('${payroll.id}')" class="text-red-500 hover:text-red-700">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('total-payroll-count').textContent = payrolls.length;
+            document.getElementById('payroll-showing-from').textContent = '1';
+            document.getElementById('payroll-showing-to').textContent = payrolls.length;
+        }
+
+        function renderRecentActivities() {
+            const tbody = document.getElementById('recent-activities');
+            tbody.innerHTML = '';
+            
+            recentActivities.forEach(activity => {
+                const row = document.createElement('tr');
+                row.className = 'highlight-row';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${activity.employee.split(' ')[0]}+${activity.employee.split(' ')[1]}&background=random" alt="">
+                            </div>
+                            <div class="ml-
 </body>
 </html>
